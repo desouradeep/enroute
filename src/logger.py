@@ -38,3 +38,57 @@ class EnrouteLogger:
             6: 'CRITICAL'
         }
         self.log_to_file(verbosities[verbose_level], header, message)
+
+    def debug(self, header, message):
+        '''
+        Initiate a debug level log
+        '''
+        GREEN = '\033[92m'
+        header_color = GREEN
+        verbose_level = 1
+        self.log(header.upper(), message, header_color, verbose_level)
+
+    def info(self, header, message):
+        '''
+        Initiate an info level log
+        '''
+        BLUE = '\033[94m'
+        header_color = BLUE
+        verbose_level = 2
+        self.log(header.upper(), message, header_color, verbose_level)
+
+    def notice(self, header, message):
+        '''
+        Initiate a notice level log
+        '''
+        CYAN = "\033[0;36m"
+        header_color = CYAN
+        verbose_level = 3
+        self.log(header.upper(), message, header_color, verbose_level)
+
+    def warning(self, header, message):
+        '''
+        Initiate a warning level log
+        '''
+        PURPLE = '\033[95m'
+        header_color = PURPLE
+        verbose_level = 4
+        self.log(header.upper(), message, header_color, verbose_level)
+
+    def error(self, header, message):
+        '''
+        Initiate an error level log
+        '''
+        YELLOW = '\033[93m'
+        header_color = YELLOW
+        verbose_level = 5
+        self.log(header.upper(), message, header_color, verbose_level)
+
+    def critical(self, header, message):
+        '''
+        Initiate a critical level log
+        '''
+        RED = '\033[91m'
+        header_color = RED
+        verbose_level = 6
+        self.log(header.upper(), message, header_color, verbose_level)
