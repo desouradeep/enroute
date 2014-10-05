@@ -1,6 +1,7 @@
 import requests
 
 import defaults
+from eThread import EThread
 
 
 class EObject:
@@ -67,3 +68,22 @@ class EObject:
 
         # download_thread will contain all the threads
         self.download_threads = []
+
+    def initiate_threads(self):
+        self.worker_threads = []
+        for thread in self.thread_count:
+            new_thread = EThread(
+                threadID=thread,
+                url=self.url,
+                header=self.download_headers[thread]
+            )
+            new_thread.start()
+            self.worker_threads.append(new_thread)
+
+        for thread in self.worker_threads:
+            thread.join()
+
+        self.post_download()
+
+    def post_download(self):
+        pass
