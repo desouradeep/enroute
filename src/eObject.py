@@ -35,7 +35,7 @@ class EObject:
         '''
         # parted files will reside in this folder, once
         # completed, the files will be concatenated.
-        self.folder_name = self.url.split('/')[-1]
+        self.file_name = self.url.split('/')[-1]
 
         # an initial request is required to download the headers for
         # the file. This information will be used to distribute tasks between
@@ -45,6 +45,7 @@ class EObject:
             headers = headers.headers
 
         self.file_size = long(headers['content-length'])
+        accept_ranges = headers['accept-ranges']
 
         # compute the chunk size per thread
         self.download_headers = []
@@ -58,6 +59,7 @@ class EObject:
             bytes_assigned += bytes_per_thread
 
             self.download_headers.append({
+                'accept-ranges': accept_ranges,
                 'range-start': range_start,
                 'range-end': range_end,
             })
@@ -75,7 +77,8 @@ class EObject:
             new_thread = EThread(
                 threadID=thread,
                 url=self.url,
-                header=self.download_headers[thread]
+                header=self.download_headers[thread],
+                file_name=self.file_name,
             )
             new_thread.start()
             self.worker_threads.append(new_thread)
