@@ -1,3 +1,4 @@
+import os
 import requests
 
 import defaults
@@ -24,6 +25,18 @@ class EObject:
             # set default verbosity level
             self.verbosity = defaults.verbosity
 
+        # parted files will reside in this folder, once
+        # completed, the files will be concatenated.
+        self.file_name = self.url.split('/')[-1]
+        if 'save_location' in kwargs:
+            self.save_location = os.path.join(
+                kwargs['save_location'], self.file_name
+            )
+        else:
+            self.save_location = os.path.join(
+                os.getcwd(), self.file_name
+            )
+
         self.make_ready()
 
     def make_ready(self):
@@ -33,9 +46,8 @@ class EObject:
         At this point, the EObject should be independent, it has acquired
         all the data from external sources.
         '''
-        # parted files will reside in this folder, once
-        # completed, the files will be concatenated.
-        self.file_name = self.url.split('/')[-1]
+        if not os.path.exists(self.save_location):
+            os.mkdir(self.save_location)
 
         # an initial request is required to download the headers for
         # the file. This information will be used to distribute tasks between
