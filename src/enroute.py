@@ -1,5 +1,8 @@
 from argparse import ArgumentParser
 import os
+import requests
+
+from logger import EnrouteLogger
 
 
 class Enroute:
@@ -7,6 +10,10 @@ class Enroute:
         self.URL = args.url
         self.thread_count = args.threads
         self.verbosity = args.verbosity
+
+        # Initiate EnrouteLogger as elog
+        LOG_FILE_NAME = 'enroute.log'
+        self.elog = EnrouteLogger(BASE_DIR_LOCATION, LOG_FILE_NAME)
 
     def main(self):
         pass
