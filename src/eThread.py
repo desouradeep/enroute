@@ -7,7 +7,8 @@ from contextlib import closing
 
 class EThread(threading.Thread):
     def __init__(self, *args, **kwargs):
-        threading.Thread.__init__(self)
+        super(EThread, self).__init__()
+        self._stop = threading.Event()
 
         self.threadID = kwargs['threadID']
         self.threadUUID = kwargs['threadUUID']
@@ -15,13 +16,19 @@ class EThread(threading.Thread):
         self.download_header = kwargs['header']
         self.save_location = kwargs['save_location']
 
-        self.filename = kwargs['filename'] + '.part' + str(self.threadID)
+        self.filename = kwargs['file_name'] + '.part' + str(self.threadID)
         self.filename = os.path.join(self.save_location, self.filename)
 
         self.accept_ranges = self.download_header['accept-ranges']
         self.range_start = self.download_header['range-start']
         self.range_end = self.download_header['range-end']
         self.part_size = self.range_end - self.range_start
+
+    def stop(self):
+        self._stop.set()
+
+    def stopped(self):
+        return self._stop.isSet()
 
     def download(self, part_file, chunk_size, data_downloaded, headers):
         with closing(
@@ -34,6 +41,9 @@ class EThread(threading.Thread):
                         part_file.flush()
                         os.fsync(part_file.fileno())
                         data_downloaded += chunk_size
+
+                        if self.stopped():
+                            break
 
     def run(self):
         print "Thread %s started" % self.threadID
