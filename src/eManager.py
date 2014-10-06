@@ -22,6 +22,39 @@ class EManager:
         new_eNode = ENode(payload)
         return new_eNode
 
+    def start_eNode(self, eNode):
+        '''
+        Start or Restart a download
+        '''
+        eNode.initiate_threads()
+
+    def pause_eNode(self, eNode):
+        '''
+        Threads paused, but remain in memory
+        '''
+        eNode.pause_threads()
+
+    def delete_eNode(self, eNode):
+        '''
+        Threads killed, but download data still remains
+        '''
+        eNode.kill_threads()
+        del eNode
+
+    def delete_eNode_with_data(self, eNode):
+        '''
+        Threads killed, downloaded data deleted
+        '''
+        self.delete_eNode(eNode)
+        # TODO: code to delete downloaded files
+
+    def start_all_eNodes(self):
+        '''
+        Attempts to start all eNodes irrespective of their states
+        '''
+        for eNode in self.eNodes:
+            self.start_eNode(eNode)
+
     def overall_status(self):
         return "%d online" % self.id
 
