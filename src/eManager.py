@@ -55,6 +55,27 @@ class EManager:
         for eNode in self.eNodes:
             self.start_eNode(eNode)
 
+    def pause_all_eNodes(self):
+        '''
+        Attempts to pause all eNodes irrespective of their states
+        '''
+        for eNode in self.eNodes:
+            self.pause_eNode(eNode)
+
+    def delete_all_eNodes(self):
+        '''
+        Attempts to delete all eNodes irrespective of their states
+        '''
+        for eNode in self.eNodes:
+            self.delete_eNode(eNode)
+
+    def delete_all_eNodes_with_data(self):
+        '''
+        Attempts to delete all eNodes and downloaded data
+        irrespective of their states
+        '''
+        for eNode in self.eNodes:
+            self.delete_eNode_with_data(eNode)
+
     def overall_status(self):
         return "%d online" % self.id
-
