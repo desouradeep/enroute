@@ -1,8 +1,7 @@
-from argparse import ArgumentParser
 import os
+import json
 
 from eNode import ENode
-from logger import EnrouteLogger
 
 
 class EManager:
@@ -12,6 +11,25 @@ class EManager:
 
     def main(self):
         pass
+
+    def overall_status(self):
+        '''
+        Returns a JSON containing data about all ENodes
+        '''
+        payload = {}
+
+        eNodes_data = []
+        for eNode in self.eNodes:
+            eNodes_data.append({
+                'name': eNode.file_name,
+                'size': eNode.file_size,
+                'url': eNode.url,
+                'thread_count': eNode.thread_count,
+                'downloaded': eNode.data_downloaded,
+            })
+
+        payload['eNodes'] = eNodes_data
+        return json.dumps(payload)
 
     def create_eNode(self, payload):
         '''
@@ -26,7 +44,7 @@ class EManager:
         '''
         Start or Restart a download
         '''
-        eNode.initiate_threads()
+        eNode.start_threads()
 
     def pause_eNode(self, eNode):
         '''
@@ -39,6 +57,8 @@ class EManager:
         Threads killed, but download data still remains
         '''
         eNode.kill_threads()
+        eNode_index = self.eNodes.index(eNode)
+        self.eNodes.pop(eNode_index)
         del eNode
 
     def delete_eNode_with_data(self, eNode):
@@ -76,6 +96,3 @@ class EManager:
         '''
         for eNode in self.eNodes:
             self.delete_eNode_with_data(eNode)
-
-    def overall_status(self):
-        return "%d online" % self.id
