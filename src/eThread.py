@@ -14,15 +14,17 @@ class EThread(threading.Thread):
         self.threadUUID = kwargs['threadUUID']
         self.url = kwargs['url']
         self.download_header = kwargs['header']
-        self.save_location = kwargs['save_location']
+        self.download_location = kwargs['download_location']
 
-        self.filename = kwargs['file_name'] + '.part' + str(self.threadID)
-        self.filename = os.path.join(self.save_location, self.filename)
+        self.file_name = kwargs['file_name'] + '.part' + str(self.threadID)
+        self.file_name = os.path.join(self.download_location, self.file_name)
 
         self.accept_ranges = self.download_header['accept-ranges']
         self.range_start = self.download_header['range-start']
         self.range_end = self.download_header['range-end']
         self.part_size = self.range_end - self.range_start
+
+        self.data_downloaded = 0
 
     def stop(self):
         self._stop.set()
@@ -30,20 +32,30 @@ class EThread(threading.Thread):
     def stopped(self):
         return self._stop.isSet()
 
-    def download(self, part_file, chunk_size, data_downloaded, headers):
+    def download(self, part_file, chunk_size, headers):
         with closing(
             requests.get(self.url, stream=True, headers=headers)
         ) as request:
-            with open(self.filename, 'wb') as part_file:
+            with open(self.file_name, 'wb') as part_file:
                 for chunk in request.iter_content(chunk_size=chunk_size):
                     if chunk:
                         part_file.write(chunk)
                         part_file.flush()
                         os.fsync(part_file.fileno())
-                        data_downloaded += chunk_size
+                        self.data_downloaded += chunk_size
 
                         if self.stopped():
                             break
+
+    def download_completed(self):
+        '''
+        Determines if the thread has done its work
+        Returns True if self.part_size matches the downloaded file size
+        '''
+        if os.path.exists(self.file_name):
+            return self.part_size == os.path.getsize(self.file_name)
+        else:
+            return False
 
     def run(self):
         print "Thread %s started" % self.threadID
@@ -58,9 +70,7 @@ class EThread(threading.Thread):
         chunk_size = 1024 * 5
 
         # create file, in case it doesn't exist
-        part_file = open(self.filename, 'a')
+        part_file = open(self.file_name, 'a')
         part_file.close()
 
-        data_downloaded = 0
-
-        self.download(part_file, chunk_size, data_downloaded, headers)
+        self.download(part_file, chunk_size, headers)
