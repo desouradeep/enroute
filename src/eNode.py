@@ -104,7 +104,10 @@ class ENode:
 
 
     def get_current_status(self):
-        return True
+        status = {
+            'status': 'online'
+        }
+        return status
 
     def post_download(self):
         pass
