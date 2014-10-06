@@ -1,4 +1,4 @@
-from gevent import monkey; monkey.patch_all()
+from gevent import monkey
 import gevent
 
 from socketio import socketio_manage
@@ -8,19 +8,20 @@ from socketio.mixins import BroadcastMixin, RoomsMixin
 
 from eManager import EManager
 
+monkey.patch_all()
+
+
 class EnrouteNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
     eManager = EManager()
 
     def recv_connect(self):
-        print 'recv_connect'
         def sendcpu():
             while True:
-                self.eManager.id += 1
                 self.broadcast_event(
                     'data',
                     self.eManager.overall_status()
                 )
-                gevent.sleep(0.1)
+                gevent.sleep(1)
         self.spawn(sendcpu)
 
     def on_user_message(self, msg):
@@ -61,13 +62,17 @@ class Application(object):
         def hello(self):
             print "hello world"
 
+
 def not_found(start_response):
     start_response('404 Not Found', [])
     return ['<h1>Not Found</h1>']
 
 
 if __name__ == '__main__':
-    print 'Listening on port http://0.0.0.0:8080 and on port 10843 (flash policy server)'
-    SocketIOServer(('0.0.0.0', 8080), Application(),
+    print 'Listening on port http://0.0.0.0:8080 and on port 10843 \
+        (flash policy server)'
+    SocketIOServer(
+        ('0.0.0.0', 8080), Application(),
         resource="socket.io", policy_server=True,
-        policy_listener=('0.0.0.0', 10843)).serve_forever()
+        policy_listener=('0.0.0.0', 10843)
+    ).serve_forever()
