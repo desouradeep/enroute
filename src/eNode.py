@@ -1,6 +1,7 @@
 import os
 import requests
 import uuid
+import shutil
 
 import defaults
 from eThread import EThread
@@ -29,14 +30,18 @@ class ENode:
         # parted files will reside in this folder, once
         # completed, the files will be concatenated.
         self.file_name = self.url.split('/')[-1]
+        self.file_name = self.file_name.split('?')[0]
+        self.folder_name = self.file_name + ".parts"
+
+        # save_location is the parent folder location
         if 'save_location' in kwargs:
-            self.save_location = os.path.join(
-                kwargs['save_location'], self.file_name
-            )
+            self.save_location = kwargs['save_location']
         else:
-            self.save_location = os.path.join(
-                os.getcwd(), self.file_name
-            )
+            self.save_location = defaults.save_location
+
+        # download location is where the threads saves the part files
+        self.download_location = os.path.join(self.save_location,
+                                              self.folder_name)
 
         self.make_ready()
 
@@ -47,8 +52,8 @@ class ENode:
         At this point, the ENode should be independent, it has acquired
         all the data from external sources.
         '''
-        if not os.path.exists(self.save_location):
-            os.mkdir(self.save_location)
+        if not os.path.exists(self.download_location):
+            os.makedirs(self.download_location)
 
         # an initial request is required to download the headers for
         # the file. This information will be used to distribute tasks between
@@ -84,15 +89,15 @@ class ENode:
         # download_thread will contain all the threads
         self.worker_threads = []
 
-    def initiate_threads(self):
-        for thread in self.thread_count:
+    def start_threads(self):
+        for thread in range(self.thread_count):
             new_thread = EThread(
                 threadID=thread,
                 threadUUID=uuid.uuid4(),
                 url=self.url,
                 header=self.download_headers[thread],
                 file_name=self.file_name,
-                save_location=self.save_location,
+                download_location=self.download_location,
             )
             new_thread.start()
             self.worker_threads.append(new_thread)
@@ -102,6 +107,19 @@ class ENode:
 
         self.post_download()
 
+    def pause_threads(self):
+        '''
+        Threads will be paused, but will be present in memory
+        '''
+        pass
+
+    def kill_threads(self):
+        '''
+        Threads will be killed
+        '''
+        #for thread in self.worker_threads:
+
+        pass
 
     def get_current_status(self):
         status = {
@@ -110,4 +128,16 @@ class ENode:
         return status
 
     def post_download(self):
-        pass
+        '''
+        This method will join the different file parts
+        '''
+        download_file_name = os.path.join(self.save_location, self.file_name)
+        new_file = open(download_file_name, 'w')
+        new_file.close()
+        new_file = open(download_file_name, 'a')
+        for thread in self.worker_threads:
+            part_file_content = open(thread.file_name, 'r')
+            shutil.copyfileobj(part_file_content, new_file)
+            part_file_content.close()
+        shutil.rmtree(self.download_location)
+        new_file.close()
