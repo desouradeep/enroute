@@ -1,6 +1,7 @@
 import requests
 import threading
 import os
+
 from contextlib import closing
 
 
@@ -9,9 +10,13 @@ class EThread(threading.Thread):
         threading.Thread.__init__(self)
 
         self.threadID = kwargs['threadID']
+        self.threadUUID = kwargs['threadUUID']
         self.url = kwargs['url']
         self.download_header = kwargs['header']
+        self.save_location = kwargs['save_location']
+
         self.filename = kwargs['filename'] + '.part' + str(self.threadID)
+        self.filename = os.path.join(self.save_location, self.filename)
 
         self.accept_ranges = self.download_header['accept-ranges']
         self.range_start = self.download_header['range-start']

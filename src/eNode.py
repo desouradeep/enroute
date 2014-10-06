@@ -1,11 +1,12 @@
 import os
 import requests
+import uuid
 
 import defaults
 from eThread import EThread
 
 
-class EObject:
+class ENode:
     def __init__(self, *args, **kwargs):
         self.proceed = True
 
@@ -43,7 +44,7 @@ class EObject:
         '''
         All the data to be set and configs to be loaded required to
         make the download object fully functional, is done here.
-        At this point, the EObject should be independent, it has acquired
+        At this point, the ENode should be independent, it has acquired
         all the data from external sources.
         '''
         if not os.path.exists(self.save_location):
@@ -81,16 +82,17 @@ class EObject:
         self.download_headers[-1]['range-end'] = self.file_size
 
         # download_thread will contain all the threads
-        self.download_threads = []
+        self.worker_threads = []
 
     def initiate_threads(self):
-        self.worker_threads = []
         for thread in self.thread_count:
             new_thread = EThread(
                 threadID=thread,
+                threadUUID=uuid.uuid4(),
                 url=self.url,
                 header=self.download_headers[thread],
                 file_name=self.file_name,
+                save_location=self.save_location,
             )
             new_thread.start()
             self.worker_threads.append(new_thread)
@@ -99,6 +101,10 @@ class EObject:
             thread.join()
 
         self.post_download()
+
+
+    def get_current_status(self):
+        return True
 
     def post_download(self):
         pass
