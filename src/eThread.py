@@ -19,7 +19,6 @@ class EThread(threading.Thread):
         self.file_name = kwargs['file_name'] + '.part' + str(self.threadID)
         self.file_name = os.path.join(self.download_location, self.file_name)
 
-        self.accept_ranges = self.download_header['accept-ranges']
         self.range_start = self.download_header['range-start']
         self.range_end = self.download_header['range-end']
         self.part_size = self.range_end - self.range_start
@@ -57,11 +56,21 @@ class EThread(threading.Thread):
         else:
             return False
 
+    def data_downloaded_physically(self):
+        '''
+        Returns the amount of data already downloaded
+        '''
+        if os.path.exists(self.file_name):
+            return os.path.getsize(self.file_name)
+        else:
+            return 0
+
     def run(self):
         print "Thread %s started" % self.threadID
+
+        self.range_start = str(self.data_downloaded_physically())
         headers = {
-            'Range': '%s=%s-%s' % (self.accept_ranges, self.range_start,
-                                   self.range_end)
+            'Range': 'bytes=%s-%s' % (self.range_start, self.range_end)
         }
 
         # set chunk size to 5KB, the program will dump this into disk

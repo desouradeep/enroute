@@ -2,16 +2,19 @@ import os
 import requests
 import uuid
 import shutil
+import threading
 
 import defaults
 from eThread import EThread
 
 
-class ENode:
-    def __init__(self, *args, **kwargs):
+class ENode(threading.Thread):
+    def __init__(self, kwargs):
+        super(ENode, self).__init__()
+
         self.proceed = True
 
-        # set minimum data required to get the ground running
+        # set minimum data required to hit the ground running
         if 'url' in kwargs:
             self.url = kwargs['url']
 
@@ -68,7 +71,6 @@ class ENode:
 
         headers = self.fetch_request_head()
         self.file_size = long(headers['content-length'])
-        accept_ranges = headers['accept-ranges']
 
         # compute the chunk size per thread
         self.download_headers = []
@@ -82,7 +84,6 @@ class ENode:
             bytes_assigned += bytes_per_thread
 
             self.download_headers.append({
-                'accept-ranges': accept_ranges,
                 'range-start': range_start,
                 'range-end': range_end,
             })
@@ -93,6 +94,26 @@ class ENode:
 
         # download_thread will contain all the threads
         self.worker_threads = []
+
+    def run(self):
+        print "eNode for %s started" % self.file_name
+        download_ready = False
+        compile_failure = False
+
+        if self.download_completed():
+            if self.data_compiled():
+                download_ready = True
+            else:
+                compile_result = self.compile_data()
+                if compile_result == 'success':
+                    download_ready = True
+                elif compile_result == 'failure':
+                    compile_failure = True
+        else:
+            self.start_threads()
+
+        print "download_ready : %s" % download_ready
+        print "compile_failure: %s" % compile_failure
 
     def start_threads(self):
         '''
@@ -113,6 +134,8 @@ class ENode:
 
         for thread in self.worker_threads:
             thread.join()
+
+        self.compile_data()
 
     def download_completed(self):
         '''
@@ -137,17 +160,25 @@ class ENode:
 
         return complete
 
+    def downloaded_file_size(self):
+        '''
+        Returns the size of the downloaded file
+        '''
+        data_downloaded = 0
+        path_exists = os.path.exists(self.get_downloaded_filename())
+        if path_exists:
+            data_downloaded = long(os.path.getsize(
+                self.get_downloaded_filename()))
+        return path_exists, data_downloaded
+
     def data_downloaded(self):
         '''
         Returns the amount of collective data downloaded by each thread
         '''
-        data_downloaded = 0
+        download_file_path, data_downloaded = self.downloaded_file_size()
 
         # check if the downloaded file itself is present
-        if os.path.exists(self.get_downloaded_filename()):
-            data_downloaded = long(os.path.getsize(
-                self.get_downloaded_filename()))
-        else:
+        if not download_file_path:
             for part in range(1, self.thread_count+1):
                 # partfile_name is the physical address of the part file
                 partfile_name = os.path.join(self.download_location) + \
@@ -157,6 +188,13 @@ class ENode:
                     data_downloaded += long(partfile_size)
 
         return data_downloaded
+
+    def data_compiled(self):
+        '''
+        Check if the downloaded file exists and is of full size
+        '''
+        download_file_size = self.downloaded_file_size()[1]
+        return self.file_size == download_file_size
 
     def pause_threads(self):
         '''
@@ -181,18 +219,22 @@ class ENode:
     def get_downloaded_filename(self):
         return os.path.join(self.save_location, self.file_name)
 
-    def post_download(self):
+    def compile_data(self):
         '''
         This method will join the different file parts
         '''
-        download_file_name = self.get_downloaded_filename()
-        new_file = open(download_file_name, 'w')
-        new_file.close()
-        new_file = open(download_file_name, 'a')
-        for thread in self.worker_threads:
-            part_file_content = open(thread.file_name, 'r')
-            # copy the file by chunks
-            shutil.copyfileobj(part_file_content, new_file)
-            part_file_content.close()
-        shutil.rmtree(self.download_location)
-        new_file.close()
+        if self.download_completed():
+            download_file_name = self.get_downloaded_filename()
+            new_file = open(download_file_name, 'w')
+            new_file.close()
+            new_file = open(download_file_name, 'a')
+            for thread in self.worker_threads:
+                part_file_content = open(thread.file_name, 'r')
+                # copy the file by chunks
+                shutil.copyfileobj(part_file_content, new_file)
+                part_file_content.close()
+            shutil.rmtree(self.download_location)
+            new_file.close()
+            return "success"
+        else:
+            return "failure"
