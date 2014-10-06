@@ -19,7 +19,12 @@ $(function() {
     });
 
     $('#start').click(function () {
-        socket.emit('user message', 'start');
+        var url = $("#url").val()
+        var payload = {
+            'action': 'start',
+            'url': url,
+        }
+        socket.emit('user message', JSON.stringify(payload));
         return false;
     });
 
@@ -32,8 +37,11 @@ $(function() {
   </head>
 <body>
 
-<button id="start">Start</button>
-<button id="stop">Stop</button>
+<form>
+    <input id="url">
+    <button id="start">Start</button>
+    <button id="stop">Stop</button>
+</form>
 
 </body>
 </html>

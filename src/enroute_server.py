@@ -1,5 +1,6 @@
 from gevent import monkey
 import gevent
+import json
 
 from socketio import socketio_manage
 from socketio.server import SocketIOServer
@@ -24,9 +25,11 @@ class EnrouteNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
                 gevent.sleep(1)
         self.spawn(sendcpu)
 
-    def on_user_message(self, msg):
-        print "ACTION: %s" % (msg)
-        self.broadcast_event('data', {'ACTION': msg})
+    def on_user_message(self, payload):
+        payload = json.loads(payload)
+        print "action: %s" % (payload['action'])
+        self.eManager.create_eNode(payload)
+        self.broadcast_event('data', 'new eNode created')
 
 
 class Application(object):

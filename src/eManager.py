@@ -1,4 +1,3 @@
-import os
 import json
 
 from eNode import ENode
@@ -7,7 +6,6 @@ from eNode import ENode
 class EManager:
     def __init__(self):
         self.eNodes = []
-        self.id = 1
 
     def main(self):
         pass
@@ -25,7 +23,7 @@ class EManager:
                 'size': eNode.file_size,
                 'url': eNode.url,
                 'thread_count': eNode.thread_count,
-                'downloaded': eNode.data_downloaded,
+                'downloaded': eNode.data_downloaded(),
             })
 
         payload['eNodes'] = eNodes_data
@@ -38,11 +36,13 @@ class EManager:
             thread_count, verbosity, save_location
         '''
         new_eNode = ENode(payload)
-        return new_eNode
+        self.eNodes.append(new_eNode)
+        new_eNode.start()
 
     def start_eNode(self, eNode):
         '''
-        Start or Restart a download
+        Restart a download. The download procedures starts automatically
+        upon creation
         '''
         eNode.start_threads()
 
