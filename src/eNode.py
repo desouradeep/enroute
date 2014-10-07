@@ -86,11 +86,15 @@ class ENode(threading.Thread):
             self.download_headers.append({
                 'range-start': range_start,
                 'range-end': range_end,
+                'part-size': bytes_per_thread,
             })
 
         # blindly set range_end as self.file_size, this will compensate for
         # any bytes left behind
+        last_thread_part_size = self.download_headers[-1]['range-end']
+        bytes_remaining = self.file_size - last_thread_part_size - 1
         self.download_headers[-1]['range-end'] = self.file_size
+        self.download_headers[-1]['part-size'] += bytes_remaining
 
         # download_thread will contain all the threads
         self.worker_threads = []
@@ -109,11 +113,11 @@ class ENode(threading.Thread):
                     download_ready = True
                 elif compile_result == 'failure':
                     compile_failure = True
+            print "download_ready : %s" % download_ready
+            print "compile_failure: %s" % compile_failure
+
         else:
             self.start_threads()
-
-        print "download_ready : %s" % download_ready
-        print "compile_failure: %s" % compile_failure
 
     def start_threads(self):
         '''
@@ -223,6 +227,7 @@ class ENode(threading.Thread):
         '''
         This method will join the different file parts
         '''
+        print "Attempting to compile data"
         if self.download_completed():
             download_file_name = self.get_downloaded_filename()
             new_file = open(download_file_name, 'w')

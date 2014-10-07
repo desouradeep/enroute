@@ -21,7 +21,7 @@ class EThread(threading.Thread):
 
         self.range_start = self.download_header['range-start']
         self.range_end = self.download_header['range-end']
-        self.part_size = self.range_end - self.range_start
+        self.part_size = self.download_header['part-size']
 
         self.data_downloaded = 0
 
@@ -68,7 +68,7 @@ class EThread(threading.Thread):
     def run(self):
         print "Thread %s started" % self.threadID
 
-        self.range_start = str(self.data_downloaded_physically())
+        #self.range_start = str(self.data_downloaded_physically())
         headers = {
             'Range': 'bytes=%s-%s' % (self.range_start, self.range_end)
         }
