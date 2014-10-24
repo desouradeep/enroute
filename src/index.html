@@ -1,48 +1,19 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <link href="static/css/style.css" rel="stylesheet">
-    <script type="text/javascript" src="static/js/jquery-1.11.0.min.js"></script>
-    <script type="text/javascript" src="static/js/socket.io.js"></script>
-    <script type="text/javascript" src="static/js/bootstrap.min.js"></script>
-    <script>
-$(function() {
+    <head>
+        <title>Enroute</title>
+    </head>
 
-    WEB_SOCKET_SWF_LOCATION = "/static/WebSocketMain.swf";
-    WEB_SOCKET_DEBUG = true;
+    <body>
+        <form>
+            <input id="url">
+            <button id="start">Start</button>
+            <button id="stop">Stop</button>
+        </form>
 
-    // Socket.io specific code
-    var socket = io.connect('/enroute');
-
-    // Update the graph when we get new data from the server
-    socket.on('data', function(data) {
-        console.log(data)
-    });
-
-    $('#start').click(function () {
-        var url = $("#url").val()
-        var payload = {
-            'action': 'start',
-            'url': url,
-        }
-        socket.emit('user message', JSON.stringify(payload));
-        return false;
-    });
-
-    $('#stop').click(function () {
-        socket.emit('user message', 'stop');
-        return false;
-    });
-});
-  </script>
-  </head>
-<body>
-
-<form>
-    <input id="url">
-    <button id="start">Start</button>
-    <button id="stop">Stop</button>
-</form>
-
-</body>
+        <script type="text/javascript" src="static/js/jquery-1.11.0.js"></script>
+        <script type="text/javascript" src="static/js/socket.io.js"></script>
+        <script type="text/javascript" src="static/js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="static/js/enroute.io.js"></script>
+    </body>
 </html>
