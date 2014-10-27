@@ -200,18 +200,10 @@ class ENode(threading.Thread):
         download_file_size = self.downloaded_file_size()[1]
         return self.file_size == download_file_size
 
-    def pause_threads(self):
+    def stop_threads(self):
         '''
         Threads will be paused, but will be present in memory
         '''
-        pass
-
-    def kill_threads(self):
-        '''
-        Threads will be killed
-        '''
-        #for thread in self.worker_threads:
-
         pass
 
     def get_current_status(self):
@@ -221,7 +213,17 @@ class ENode(threading.Thread):
         return status
 
     def get_downloaded_filename(self):
+        '''
+        Get absolute location of the file being downloaded
+        '''
         return os.path.join(self.save_location, self.file_name)
+
+    def get_group_foldername(self):
+        '''
+        Get absolute location of the folder in which the downloaded parts
+        are being stored
+        '''
+        return os.path.join(self.download_location)
 
     def compile_data(self):
         '''

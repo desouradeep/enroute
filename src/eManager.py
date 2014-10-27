@@ -1,4 +1,6 @@
 import json
+import os
+from shutil import rmtree
 
 from eNode import ENode
 
@@ -46,17 +48,17 @@ class EManager:
         '''
         eNode.start_threads()
 
-    def pause_eNode(self, eNode):
+    def stop_eNode(self, eNode):
         '''
-        Threads paused, but remain in memory
+        Threads stopped safely
         '''
-        eNode.pause_threads()
+        eNode.stop_threads()
 
     def delete_eNode(self, eNode):
         '''
         Threads killed, but download data still remains
         '''
-        eNode.kill_threads()
+        eNode.stop_threads()
         eNode_index = self.eNodes.index(eNode)
         self.eNodes.pop(eNode_index)
         del eNode
@@ -66,7 +68,16 @@ class EManager:
         Threads killed, downloaded data deleted
         '''
         self.delete_eNode(eNode)
-        # TODO: code to delete downloaded files
+
+        # Remove compiled file if its exists
+        downloaded_filename = eNode.get_downloaded_filename()
+        if os.path.exists(downloaded_filename):
+            os.remove(downloaded_filename)
+
+        # Remove group folder containing all the parts if it exists
+        group_foldername = eNode.get_group_foldername()
+        if os.path.exists(group_foldername):
+            rmtree(group_foldername)
 
     def start_all_eNodes(self):
         '''

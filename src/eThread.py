@@ -26,9 +26,15 @@ class EThread(threading.Thread):
         self.data_downloaded = 0
 
     def stop(self):
+        '''
+        Initiated by a stop request from the client
+        '''
         self._stop.set()
 
     def stopped(self):
+        '''
+        Returns stopped status
+        '''
         return self._stop.isSet()
 
     def download(self, part_file, chunk_size, headers):
@@ -43,6 +49,7 @@ class EThread(threading.Thread):
                         os.fsync(part_file.fileno())
                         self.data_downloaded += chunk_size
 
+                        # stop request initiated by client
                         if self.stopped():
                             break
 
