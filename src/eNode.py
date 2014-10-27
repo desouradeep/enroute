@@ -58,11 +58,14 @@ class ENode(threading.Thread):
         the file. This information will be used to distribute tasks between
         the multiple threads.
         '''
-        request_headers = requests.head(self.url)
-        if request_headers.status_code == 200:
-            headers = request_headers.headers
-            return headers
-        else:
+        try:
+            request_headers = requests.head(self.url)
+            if request_headers.status_code == 200:
+                headers = request_headers.headers
+                return headers
+            else:
+                return "invalid-url"
+        except:
             return "invalid-url"
 
     def make_ready(self):
