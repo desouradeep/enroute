@@ -116,7 +116,7 @@ class ENode(threading.Thread):
         self.stop_downloading = False
 
         # Unique ID for the eNode
-        self.uuid = uuid.uuid4()
+        self.uuid = str(uuid.uuid4())
 
     def run(self):
         print "eNode for %s started" % self.file_name
@@ -216,7 +216,8 @@ class ENode(threading.Thread):
         '''
         Return the percentage of the entire data downloaded
         '''
-        percentage = float(self.download_file_size) / self.file_size * 100
+        downloaded_file_size = float(self.downloaded_file_size()[1])
+        percentage = downloaded_file_size / self.file_size * 100
         return percentage
 
     def data_compiled(self):
@@ -245,8 +246,8 @@ class ENode(threading.Thread):
             'url': self.url,
             'thread_count': self.thread_count,
             'file_name': self.file_name,
-            'file_location': self.get_downloaded_filename,
-            'group_foldername': self.get_group_foldername,
+            'file_location': self.get_downloaded_filename(),
+            'group_foldername': self.get_group_foldername(),
             'file_size': self.file_size,
             'percentage_downloaded': self.percentage_downloaded(),
             'thread_status': thread_status,
