@@ -37,6 +37,12 @@ class EThread(threading.Thread):
         '''
         return self._stop.isSet()
 
+    def running(self):
+        '''
+        Returns running status
+        '''
+        return not self.stopped()
+
     def download(self, part_file, chunk_size, headers):
         with closing(
             requests.get(self.url, stream=True, headers=headers)
@@ -71,6 +77,15 @@ class EThread(threading.Thread):
             return os.path.getsize(self.file_name)
         else:
             return 0
+
+    def percentage_downloaded(self):
+        '''
+        Returns the percentage of data downloaded
+        '''
+        data_downloaded = float(self.data_downloaded_physically())
+        percentage = data_downloaded / self.part_size * 100
+
+        return percentage
 
     def run(self):
         print "Thread %s started" % self.threadID

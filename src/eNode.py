@@ -99,6 +99,9 @@ class ENode(threading.Thread):
         # worker_threads will contain all the threads
         self.worker_threads = []
 
+        # This becomes True when stop request is initiated
+        self.stop_downloading = False
+
     def run(self):
         print "eNode for %s started" % self.file_name
         download_ready = False
@@ -193,6 +196,13 @@ class ENode(threading.Thread):
 
         return data_downloaded
 
+    def percentage_downloaded(self):
+        '''
+        Return the percentage of the entire data downloaded
+        '''
+        percentage = float(self.download_file_size) / self.file_size * 100
+        return percentage
+
     def data_compiled(self):
         '''
         Check if the downloaded file exists and is of full size
@@ -204,14 +214,40 @@ class ENode(threading.Thread):
         '''
         Stop all the eThreads safely
         '''
+        self.stop_downloading = True
         for thread in self.worker_threads:
             thread.stop()
 
     def get_current_status(self):
-        status = {
-            'status': 'online'
+        '''
+        Return detailed status about the eNode and all the threads
+        '''
+        thread_status = []
+
+        eNode_status = {
+            'url': self.url,
+            'thread_count': self.thread_count,
+            'file_name': self.file_name,
+            'file_location': self.get_downloaded_filename,
+            'group_foldername': self.get_group_foldername,
+            'file_size': self.file_size,
+            'percentage_downloaded': self.percentage_downloaded(),
+            'thread_status': thread_status,
+            'stop_downloading': self.stop_downloading,
         }
-        return status
+
+        for thread in self.worker_threads:
+            thread_status.append({
+                'uuid': thread.threadUUID,
+                'part_name': thread.file_name,
+                'part_size': thread.part_size,
+                'data_downloaded': thread.data_downloaded,
+                'running': thread.running(),
+                'download_completed': thread.download_completed,
+                'percentage_downloaded': thread.percentage_downloaded,
+            })
+
+        return eNode_status
 
     def get_downloaded_filename(self):
         '''
