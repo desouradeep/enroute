@@ -96,7 +96,7 @@ class ENode(threading.Thread):
         self.download_headers[-1]['range-end'] = self.file_size
         self.download_headers[-1]['part-size'] += bytes_remaining
 
-        # download_thread will contain all the threads
+        # worker_threads will contain all the threads
         self.worker_threads = []
 
     def run(self):
@@ -202,9 +202,10 @@ class ENode(threading.Thread):
 
     def stop_threads(self):
         '''
-        Threads will be paused, but will be present in memory
+        Stop all the eThreads safely
         '''
-        pass
+        for thread in self.worker_threads:
+            thread.stop()
 
     def get_current_status(self):
         status = {
