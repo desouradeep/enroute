@@ -115,6 +115,9 @@ class ENode(threading.Thread):
         # This becomes True when stop request is initiated
         self.stop_downloading = False
 
+        # Unique ID for the eNode
+        self.uuid = uuid.uuid4()
+
     def run(self):
         print "eNode for %s started" % self.file_name
         download_ready = False
@@ -238,6 +241,7 @@ class ENode(threading.Thread):
         thread_status = []
 
         eNode_status = {
+            'uuid': self.uuid,
             'url': self.url,
             'thread_count': self.thread_count,
             'file_name': self.file_name,

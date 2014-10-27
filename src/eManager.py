@@ -14,19 +14,15 @@ class EManager:
 
     def overall_status(self):
         '''
-        Returns a JSON containing data about all ENodes
+        Returns a JSON containing data about all eNodes
         '''
         payload = {}
 
         eNodes_data = []
         for eNode in self.eNodes:
-            eNodes_data.append({
-                'name': eNode.file_name,
-                'size': eNode.file_size,
-                'url': eNode.url,
-                'thread_count': eNode.thread_count,
-                'downloaded': eNode.data_downloaded(),
-            })
+            eNodes_data.append(
+                eNode.get_current_status()
+            )
 
         payload['eNodes'] = eNodes_data
         return json.dumps(payload)

@@ -17,14 +17,14 @@ class EnrouteNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
     eManager = EManager()
 
     def recv_connect(self):
-        def sendcpu():
+        def start_notifying():
             while True:
                 self.broadcast_event(
                     'data',
                     self.eManager.overall_status()
                 )
                 gevent.sleep(1)
-        self.spawn(sendcpu)
+        self.spawn(start_notifying)
 
     def on_user_message(self, payload):
         payload = json.loads(payload)
