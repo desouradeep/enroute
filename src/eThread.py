@@ -26,10 +26,22 @@ class EThread(threading.Thread):
         self.data_downloaded = 0
 
     def stop(self):
+        '''
+        Initiated by a stop request from the client
+        '''
         self._stop.set()
 
     def stopped(self):
+        '''
+        Returns stopped status
+        '''
         return self._stop.isSet()
+
+    def running(self):
+        '''
+        Returns running status
+        '''
+        return not self.stopped()
 
     def download(self, part_file, chunk_size, headers):
         with closing(
@@ -43,6 +55,7 @@ class EThread(threading.Thread):
                         os.fsync(part_file.fileno())
                         self.data_downloaded += chunk_size
 
+                        # stop request initiated by client
                         if self.stopped():
                             break
 
@@ -64,6 +77,15 @@ class EThread(threading.Thread):
             return os.path.getsize(self.file_name)
         else:
             return 0
+
+    def percentage_downloaded(self):
+        '''
+        Returns the percentage of data downloaded
+        '''
+        data_downloaded = float(self.data_downloaded_physically())
+        percentage = data_downloaded / self.part_size * 100
+
+        return percentage
 
     def run(self):
         print "Thread %s started" % self.threadID

@@ -1,4 +1,6 @@
 import json
+import os
+from shutil import rmtree
 
 from eNode import ENode
 
@@ -12,19 +14,15 @@ class EManager:
 
     def overall_status(self):
         '''
-        Returns a JSON containing data about all ENodes
+        Returns a JSON containing data about all eNodes
         '''
         payload = {}
 
         eNodes_data = []
         for eNode in self.eNodes:
-            eNodes_data.append({
-                'name': eNode.file_name,
-                'size': eNode.file_size,
-                'url': eNode.url,
-                'thread_count': eNode.thread_count,
-                'downloaded': eNode.data_downloaded(),
-            })
+            eNodes_data.append(
+                eNode.get_current_status()
+            )
 
         payload['eNodes'] = eNodes_data
         return json.dumps(payload)
@@ -36,8 +34,10 @@ class EManager:
             thread_count, verbosity, save_location
         '''
         new_eNode = ENode(payload)
-        self.eNodes.append(new_eNode)
-        new_eNode.start()
+        if not new_eNode.invalid_url:
+            # eNode was unable to retrieve the file header
+            self.eNodes.append(new_eNode)
+            new_eNode.start()
 
     def start_eNode(self, eNode):
         '''
@@ -46,17 +46,17 @@ class EManager:
         '''
         eNode.start_threads()
 
-    def pause_eNode(self, eNode):
+    def stop_eNode(self, eNode):
         '''
-        Threads paused, but remain in memory
+        Threads stopped safely
         '''
-        eNode.pause_threads()
+        eNode.stop_threads()
 
     def delete_eNode(self, eNode):
         '''
         Threads killed, but download data still remains
         '''
-        eNode.kill_threads()
+        eNode.stop_threads()
         eNode_index = self.eNodes.index(eNode)
         self.eNodes.pop(eNode_index)
         del eNode
@@ -66,7 +66,16 @@ class EManager:
         Threads killed, downloaded data deleted
         '''
         self.delete_eNode(eNode)
-        # TODO: code to delete downloaded files
+
+        # Remove compiled file if its exists
+        downloaded_filename = eNode.get_downloaded_filename()
+        if os.path.exists(downloaded_filename):
+            os.remove(downloaded_filename)
+
+        # Remove group folder containing all the parts if it exists
+        group_foldername = eNode.get_group_foldername()
+        if os.path.exists(group_foldername):
+            rmtree(group_foldername)
 
     def start_all_eNodes(self):
         '''

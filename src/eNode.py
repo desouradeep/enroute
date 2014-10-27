@@ -46,6 +46,10 @@ class ENode(threading.Thread):
         self.download_location = os.path.join(self.save_location,
                                               self.folder_name)
 
+        # this becomes True if a request to the file header responds with
+        # a non 200 status code
+        self.invalid_url = False
+
         self.make_ready()
 
     def fetch_request_head(self):
@@ -54,10 +58,15 @@ class ENode(threading.Thread):
         the file. This information will be used to distribute tasks between
         the multiple threads.
         '''
-        request_headers = requests.head(self.url)
-        if request_headers.status_code == 200:
-            headers = request_headers.headers
-        return headers
+        try:
+            request_headers = requests.head(self.url)
+            if request_headers.status_code == 200:
+                headers = request_headers.headers
+                return headers
+            else:
+                return "invalid-url"
+        except:
+            return "invalid-url"
 
     def make_ready(self):
         '''
@@ -70,6 +79,10 @@ class ENode(threading.Thread):
             os.makedirs(self.download_location)
 
         headers = self.fetch_request_head()
+        if headers == 'invalid-url':
+            self.invalid_url = True
+            return
+
         self.file_size = long(headers['content-length'])
 
         # compute the chunk size per thread
@@ -96,8 +109,14 @@ class ENode(threading.Thread):
         self.download_headers[-1]['range-end'] = self.file_size
         self.download_headers[-1]['part-size'] += bytes_remaining
 
-        # download_thread will contain all the threads
+        # worker_threads will contain all the threads
         self.worker_threads = []
+
+        # This becomes True when stop request is initiated
+        self.stop_downloading = False
+
+        # Unique ID for the eNode
+        self.uuid = str(uuid.uuid4())
 
     def run(self):
         print "eNode for %s started" % self.file_name
@@ -193,6 +212,14 @@ class ENode(threading.Thread):
 
         return data_downloaded
 
+    def percentage_downloaded(self):
+        '''
+        Return the percentage of the entire data downloaded
+        '''
+        downloaded_file_size = float(self.downloaded_file_size()[1])
+        percentage = downloaded_file_size / self.file_size * 100
+        return percentage
+
     def data_compiled(self):
         '''
         Check if the downloaded file exists and is of full size
@@ -200,28 +227,58 @@ class ENode(threading.Thread):
         download_file_size = self.downloaded_file_size()[1]
         return self.file_size == download_file_size
 
-    def pause_threads(self):
+    def stop_threads(self):
         '''
-        Threads will be paused, but will be present in memory
+        Stop all the eThreads safely
         '''
-        pass
-
-    def kill_threads(self):
-        '''
-        Threads will be killed
-        '''
-        #for thread in self.worker_threads:
-
-        pass
+        self.stop_downloading = True
+        for thread in self.worker_threads:
+            thread.stop()
 
     def get_current_status(self):
-        status = {
-            'status': 'online'
+        '''
+        Return detailed status about the eNode and all the threads
+        '''
+        thread_status = []
+
+        eNode_status = {
+            'uuid': self.uuid,
+            'url': self.url,
+            'thread_count': self.thread_count,
+            'file_name': self.file_name,
+            'file_location': self.get_downloaded_filename(),
+            'group_foldername': self.get_group_foldername(),
+            'file_size': self.file_size,
+            'percentage_downloaded': self.percentage_downloaded(),
+            'thread_status': thread_status,
+            'stop_downloading': self.stop_downloading,
         }
-        return status
+
+        for thread in self.worker_threads:
+            thread_status.append({
+                'uuid': thread.threadUUID,
+                'part_name': thread.file_name,
+                'part_size': thread.part_size,
+                'data_downloaded': thread.data_downloaded,
+                'running': thread.running(),
+                'download_completed': thread.download_completed,
+                'percentage_downloaded': thread.percentage_downloaded,
+            })
+
+        return eNode_status
 
     def get_downloaded_filename(self):
+        '''
+        Get absolute location of the file being downloaded
+        '''
         return os.path.join(self.save_location, self.file_name)
+
+    def get_group_foldername(self):
+        '''
+        Get absolute location of the folder in which the downloaded parts
+        are being stored
+        '''
+        return os.path.join(self.download_location)
 
     def compile_data(self):
         '''
