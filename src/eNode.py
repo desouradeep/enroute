@@ -46,6 +46,10 @@ class ENode(threading.Thread):
         self.download_location = os.path.join(self.save_location,
                                               self.folder_name)
 
+        # this becomes True if a request to the file header responds with
+        # a non 200 status code
+        self.invalid_url = False
+
         self.make_ready()
 
     def fetch_request_head(self):
@@ -57,7 +61,9 @@ class ENode(threading.Thread):
         request_headers = requests.head(self.url)
         if request_headers.status_code == 200:
             headers = request_headers.headers
-        return headers
+            return headers
+        else:
+            return "invalid-url"
 
     def make_ready(self):
         '''
@@ -70,6 +76,10 @@ class ENode(threading.Thread):
             os.makedirs(self.download_location)
 
         headers = self.fetch_request_head()
+        if headers == 'invalid-url':
+            self.invalid_url = True
+            return
+
         self.file_size = long(headers['content-length'])
 
         # compute the chunk size per thread

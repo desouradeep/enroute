@@ -38,8 +38,10 @@ class EManager:
             thread_count, verbosity, save_location
         '''
         new_eNode = ENode(payload)
-        self.eNodes.append(new_eNode)
-        new_eNode.start()
+        if not new_eNode.invalid_url:
+            # eNode was unable to retrieve the file header
+            self.eNodes.append(new_eNode)
+            new_eNode.start()
 
     def start_eNode(self, eNode):
         '''
