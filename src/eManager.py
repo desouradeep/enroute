@@ -1,16 +1,15 @@
 import json
+import threading
 import os
 from shutil import rmtree
 
 from eNode import ENode
 
 
-class EManager:
+class EManager(threading.Thread):
     def __init__(self):
+        super(EManager, self).__init__()
         self.eNodes = []
-
-    def main(self):
-        pass
 
     def overall_status(self):
         '''
@@ -29,7 +28,7 @@ class EManager:
 
     def create_eNode(self, payload):
         '''
-        Spawn a new node. payload must be a dict with atleast a url.
+        Spawn a new cnode. payload must be a dict with atleast a url.
         payload can also have optional data such as:
             thread_count, verbosity, save_location
         '''

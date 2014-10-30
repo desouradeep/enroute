@@ -146,7 +146,7 @@ class ENode(threading.Thread):
         for thread in range(self.thread_count):
             new_thread = EThread(
                 threadID=thread+1,
-                threadUUID=uuid.uuid4(),
+                threadUUID=str(uuid.uuid4()),
                 url=self.url,
                 header=self.download_headers[thread],
                 file_name=self.file_name,
@@ -261,7 +261,7 @@ class ENode(threading.Thread):
                 'part_size': thread.part_size,
                 'data_downloaded': thread.data_downloaded,
                 'running': thread.running(),
-                'download_completed': thread.download_completed,
+                'download_completed': thread.download_completed(),
                 'percentage_downloaded': thread.percentage_downloaded,
             })
 

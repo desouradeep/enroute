@@ -12,24 +12,26 @@ from eManager import EManager
 
 monkey.patch_all()
 
+eManager = EManager()
+
 
 class EnrouteNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
-    eManager = EManager()
 
     def recv_connect(self):
         def start_notifying():
             while True:
                 self.broadcast_event(
                     'data',
-                    self.eManager.overall_status()
+                    eManager.overall_status()
                 )
-                gevent.sleep(1)
+                sockets = len(self.environ['socketio'].server.sockets.keys())
+                gevent.sleep(sockets)
         self.spawn(start_notifying)
 
     def on_user_message(self, payload):
         payload = json.loads(payload)
         print "action: %s" % (payload['action'])
-        self.eManager.create_eNode(payload)
+        eManager.create_eNode(payload)
         self.broadcast_event('data', 'new eNode created')
 
 
