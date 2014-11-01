@@ -44,7 +44,8 @@ class EnrouteNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    status = eManager.overall_status()
+    return render_template('index.html', status=status, hello="souradeep")
 
 
 @socketio.on('my event', namespace='/test')
