@@ -5,7 +5,7 @@ $(document).ready(function() {
     // Socket.io specific code
     var socket = io.connect('/enroute');
 
-    // Update the graph when we get new data from the server
+    // Update DOM as per data received
     socket.on('data', function(data) {
         console.log(data);
     });

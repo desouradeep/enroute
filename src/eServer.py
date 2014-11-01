@@ -1,6 +1,17 @@
 #!/usr/bin/python
-from gevent import monkey
-import gevent
+from flask import Flask, render_template
+from flask.ext.socketio import SocketIO, emit
+
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'secret!'
+socketio = SocketIO(app)
+
+import os
+from werkzeug.wsgi import SharedDataMiddleware
+
+from flask import Flask, request, send_file
+from eManager import EManager
+
 import json
 
 from socketio import socketio_manage
@@ -8,15 +19,11 @@ from socketio.server import SocketIOServer
 from socketio.namespace import BaseNamespace
 from socketio.mixins import BroadcastMixin, RoomsMixin
 
-from eManager import EManager
-
-monkey.patch_all()
 
 eManager = EManager()
 
 
 class EnrouteNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
-
     def recv_connect(self):
         def start_notifying():
             while True:
@@ -35,50 +42,43 @@ class EnrouteNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
         self.broadcast_event('data', 'new eNode created')
 
 
-class Application(object):
-    def __init__(self):
-        self.buffer = []
-
-    def __call__(self, environ, start_response):
-        path = environ['PATH_INFO'].strip('/') or 'index.html'
-
-        if path.startswith('static/') or path == 'index.html':
-            try:
-                data = open(path).read()
-            except Exception:
-                return not_found(start_response)
-
-            if path.endswith(".js"):
-                content_type = "text/javascript"
-            elif path.endswith(".css"):
-                content_type = "text/css"
-            elif path.endswith(".swf"):
-                content_type = "application/x-shockwave-flash"
-            else:
-                content_type = "text/html"
-
-            start_response('200 OK', [('Content-Type', content_type)])
-            return [data]
-
-        if path.startswith("socket.io"):
-            socketio_manage(environ, {'/enroute': EnrouteNamespace})
-        else:
-            return not_found(start_response)
-
-        def hello(self):
-            print "hello world"
+@app.route('/')
+def index():
+    return render_template('index.html')
 
 
-def not_found(start_response):
-    start_response('404 Not Found', [])
-    return ['<h1>Not Found</h1>']
+@socketio.on('my event', namespace='/test')
+def test_message(message):
+    emit('my response', {'data': message['data']})
 
+
+@socketio.on('my broadcast event', namespace='/test')
+def test_message(message):
+    emit('my response', {'data': message['data']}, broadcast=True)
+
+
+@socketio.on('connect', namespace='/test')
+def test_connect():
+    emit('my response', {'data': 'Connected'})
+
+
+@socketio.on('disconnect', namespace='/test')
+def test_disconnect():
+    print('Client disconnected')
+
+
+@app.route("/socket.io/<path:path>")
+def run_socketio(path):
+    socketio_manage(request.environ, {'': EnrouteNamespace})
 
 if __name__ == '__main__':
-    print 'Listening on port http://0.0.0.0:8080 and on port 10843 \
-        (flash policy server)'
+    print 'Listening on http://localhost:8080'
+    app.debug = True
+    app = SharedDataMiddleware(app, {
+        '/': os.path.join(os.path.dirname(__file__), 'static')
+    })
+
     SocketIOServer(
-        ('0.0.0.0', 8080), Application(),
-        resource="socket.io", policy_server=True,
-        policy_listener=('0.0.0.0', 10843)
+        ('0.0.0.0', 8080), app,
+        resource="socket.io", policy_server=False
     ).serve_forever()
