@@ -1,14 +1,33 @@
-{% extends "base.html" %}
+{% extends "plot.html" %}
 
 {% block download_lists %}
-<form>
-    <input id="url">
-    <button id="start">Start</button>
-    <button id="stop">Stop</button>
-
+<!--
+    <form>
+        <input id="url">
+        <button id="start">Start</button>
+        <button id="stop">Stop</button>
+    </form>
     <br>
+-->
+    <div class="row">
+    {% for eNode in status.eNodes %}
+        <div class="well enode">
+            <div class="row">
+                <div class="col-xs-12">
+                    <div class="pull-left">{{ eNode.file_name }}</div>
+                    <div class="pull-right">speed ETA</div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xs-12">
+                    <div class="progress download-progress">
+                        <div class="progress-bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 60%;"><span class="sr-only">60% Complete</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+    </div>
 
-    {{ status }}
-
-</form>
 {% endblock %}
