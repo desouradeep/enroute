@@ -1,3 +1,19 @@
-#page-wrapper {
+body {
     background: #ddd;
+}
+
+.navbar {
+    border-radius: 0;
+}
+
+.enode {
+    padding-bottom: 0;
+    padding-top:5px;
+    box-shadow:0 0 7px 0 #9E9E9E;
+    border: 0;
+    border-radius: 0;
+}
+
+.download-progress {
+    margin: 12px;
 }
