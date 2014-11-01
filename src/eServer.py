@@ -1,85 +1,65 @@
 #!/usr/bin/python
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from flask.ext.socketio import SocketIO, emit
+from flask import copy_current_request_context
+
+import gevent
+import json
+
+from eManager import EManager
+
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app)
 
-import os
-from werkzeug.wsgi import SharedDataMiddleware
-
-from flask import Flask, request, send_file
-from eManager import EManager
-
-import json
-
-from socketio import socketio_manage
-from socketio.server import SocketIOServer
-from socketio.namespace import BaseNamespace
-from socketio.mixins import BroadcastMixin, RoomsMixin
-
-
 eManager = EManager()
 
 
-class EnrouteNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
-    def recv_connect(self):
-        def start_notifying():
-            while True:
-                self.broadcast_event(
-                    'data',
-                    eManager.overall_status()
-                )
-                sockets = len(self.environ['socketio'].server.sockets.keys())
-                gevent.sleep(sockets)
-        self.spawn(start_notifying)
-
-    def on_user_message(self, payload):
-        payload = json.loads(payload)
-        print "action: %s" % (payload['action'])
-        eManager.create_eNode(payload)
-        self.broadcast_event('data', 'new eNode created')
-
+##################################
+########## Flask views ###########
+##################################
 
 @app.route('/')
 def index():
     status = eManager.overall_status()
-    return render_template('index.html', status=status, hello="souradeep")
+    return render_template('index.html', status=status)
 
 
-@socketio.on('my event', namespace='/test')
-def test_message(message):
-    emit('my response', {'data': message['data']})
+##################################
+#### Socket io specific codes ####
+##################################
+
+# Connection established with a new client
+@socketio.on('connect')
+def connect():
+    print 'Client connected'
+
+    @copy_current_request_context
+    def start_notifying():
+        while True:
+            emit('data', eManager.overall_status(), broadcast=True)
+            sockets = len(request.environ['socketio'].server.sockets.keys())
+            gevent.sleep(sockets)
+    gevent.spawn(start_notifying)
 
 
-@socketio.on('my broadcast event', namespace='/test')
-def test_message(message):
-    emit('my response', {'data': message['data']}, broadcast=True)
+# Connection to a client lost
+@socketio.on('disconnect')
+def disconnect():
+    print 'Client disconnected'
 
 
-@socketio.on('connect', namespace='/test')
-def test_connect():
-    emit('my response', {'data': 'Connected'})
+# New eNode request initiated by a client
+@socketio.on('new-eNode')
+def new_download(payload):
+    payload = json.loads(payload)
+    print "action: %s" % (payload['action'])
+    eManager.create_eNode(payload)
+    emit('data', 'new eNode created', broadcast=True)
 
-
-@socketio.on('disconnect', namespace='/test')
-def test_disconnect():
-    print('Client disconnected')
-
-
-@app.route("/socket.io/<path:path>")
-def run_socketio(path):
-    socketio_manage(request.environ, {'': EnrouteNamespace})
 
 if __name__ == '__main__':
-    print 'Listening on http://localhost:8080'
-    app.debug = True
-    app = SharedDataMiddleware(app, {
-        '/': os.path.join(os.path.dirname(__file__), 'static')
-    })
-
-    SocketIOServer(
-        ('0.0.0.0', 8080), app,
-        resource="socket.io", policy_server=False
-    ).serve_forever()
+    print 'Listening on http://localhost:5000'
+    app.DEBUG = True
+    socketio.run(app)

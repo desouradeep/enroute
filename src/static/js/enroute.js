@@ -3,11 +3,15 @@ $(document).ready(function() {
     WEB_SOCKET_DEBUG = true;
 
     // Socket.io specific code
-    var socket = io.connect('/enroute');
+    var socket = io.connect('http://' + document.domain + ':' + location.port);
 
     // Update DOM as per data received
     socket.on('data', function(data) {
         console.log(data);
+    });
+
+    socket.on('connect', function() {
+        socket.emit('connect');
     });
 
     $('#start').click(function () {
@@ -16,7 +20,7 @@ $(document).ready(function() {
             'action': 'start',
             'url': url,
         };
-        socket.emit('user message', JSON.stringify(payload));
+        socket.emit('new-eNode', JSON.stringify(payload));
         return false;
     });
 
