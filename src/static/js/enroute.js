@@ -25,19 +25,6 @@ $(document).ready(function() {
     });
 
     $('#stop').click(function () {
-        socket.emit('user message', 'stop');
-        return false;
-    });
-
-    // page height setup specific codes
-    function onResize() {
-        var window_height = $(window).height();
-        var navbar_height = $('#navbar').height();
-        var page_wrapper = $('#page-wrapper');
-        page_wrapper.height(window_height - navbar_height - 45);
-    }
-    onResize();
-    $(window).resize(function() {
-        onResize();
+        socket.emit('stop-eNode', 'stop');
     });
 });
