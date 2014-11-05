@@ -1,5 +1,12 @@
 body {
     background: #ddd;
+    margin-top: 60px;
+    font-family: fontawesome;
+}
+
+@font-face {
+    font-family: fontawesome;
+    src: url(static/fonts/fontawesome-webfont.woff);
 }
 
 .navbar {
@@ -9,11 +16,21 @@ body {
 .enode {
     padding-bottom: 0;
     padding-top:5px;
+    margin-bottom: 10px;
     box-shadow:0 0 7px 0 #9E9E9E;
     border: 0;
-    border-radius: 0;
+    border-radius: 3px;
+    opacity: 0.9;
 }
 
 .download-progress {
     margin: 12px;
+}
+
+.full-width {
+    width: 100%;
+}
+
+.half-width {
+    width: 50%;
 }
