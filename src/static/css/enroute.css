@@ -34,3 +34,25 @@ body {
 .half-width {
     width: 50%;
 }
+
+.add-button {
+    height: 50px;
+    width: 50px;
+    border-radius: 50px;
+    position: absolute;
+    right: 28px;
+    background: rgb(8, 35, 175);
+    opacity: 0.7;
+    box-shadow: 0 0 10px 0 #0C0808;
+}
+
+#add-button-text {
+    font-size: 22px;
+    color: rgb(233, 233, 233);
+    left: 1px;
+    top: 1px;
+}
+
+.add-button:hover {
+    opacity: 1;
+}

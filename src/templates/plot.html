@@ -10,4 +10,55 @@
         </div>
     </div>
 </div>
+<button type="button" class="btn add-button" href="#" data-toggle="modal" data-target="#addModal">
+    <span id="add-button-text" class="glyphicon glyphicon-plus"></span>
+</button>
+
+
+<!-- Add Download Modal -->
+<div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="myModalLabel">Add URL to download</h4>
+      </div>
+      <div class="modal-body">
+
+        <form role="form" class="form-horizontal">
+            <div class="form-group">
+                <label for="url" class="col-sm-3 control-label">URL: </label>
+                <div class="col-sm-9">
+                    <input type="url" class="form-control" id="url" placeholder="Enter URL">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label for="input-location" class="col-sm-6 control-label">Save Location: </label>
+                        <div class="col-sm-6">
+                            <input id="input-location" type="file">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label for="threads" class="col-sm-8 control-label">Threads (max. 10): </label>
+                        <div class="col-sm-4">
+                            <input id="threads" type="number" name="quantity" class="form-control" min="1" max="8">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button id="start" type="button" class="btn btn-primary">Start</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endblock %}

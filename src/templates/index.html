@@ -1,14 +1,6 @@
 {% extends "plot.html" %}
 
 {% block download_lists %}
-
- <form>
-     <input id="url">
-     <button id="start">Start</button>
-     <button id="stop">Stop</button>
- </form>
- <br>
-
     <div class="row">
     {% for eNode in status.eNodes %}
         <div class="well enode">
