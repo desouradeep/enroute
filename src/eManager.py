@@ -22,7 +22,6 @@ class EManager(threading.Thread):
             eNodes_data.append(
                 eNode.get_current_status()
             )
-
         payload['eNodes'] = eNodes_data
         return json.dumps(payload)
 
@@ -34,9 +33,10 @@ class EManager(threading.Thread):
         '''
         new_eNode = ENode(payload)
         if not new_eNode.invalid_url:
-            # eNode was unable to retrieve the file header
             self.eNodes.append(new_eNode)
             new_eNode.start()
+        else:
+            print "eNode was unable to retrieve the file header"
 
     def start_eNode(self, eNode):
         '''

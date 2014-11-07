@@ -1,0 +1,36 @@
+{% extends "plot.html" %}
+
+{% block download_lists %}
+    <div class="row">
+    {% for eNode in status.eNodes %}
+        <div class="well enode">
+            <div class="row">
+                <div class="col-xs-12">
+                    <div class="pull-left">{{ eNode.file_name }}</div>
+                    <div class="pull-right">ETA</div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xs-12">
+                    <table class="full-width">
+                        <tr>
+                            <td class="percentage-holder">
+                                <div>{{ eNode.percentage_downloaded }}%</div>
+                            </td>
+                            <td class="progress-bar-holder">
+                                <div class="progress download-progress">
+                                    <div class="progress-bar" role="progressbar" style="width: {{ eNode.percentage_downloaded }}%;"></div>
+                                </div>
+                            </td>
+                            <td class="speed-holder">
+                                <div class="pull-right">1.2 MBps</div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+    </div>
+
+{% endblock %}

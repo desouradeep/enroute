@@ -1,84 +1,76 @@
 #!/usr/bin/python
 from gevent import monkey
+monkey.patch_all()
+
+from flask import Flask, render_template, request
+from flask.ext.socketio import SocketIO, emit
+from flask import copy_current_request_context
+
 import gevent
 import json
 
-from socketio import socketio_manage
-from socketio.server import SocketIOServer
-from socketio.namespace import BaseNamespace
-from socketio.mixins import BroadcastMixin, RoomsMixin
-
 from eManager import EManager
 
-monkey.patch_all()
+
+app = Flask(__name__)
+app.debug = True
+app.config['SECRET_KEY'] = 'secret!'
+socketio = SocketIO(app)
+thread = None
 
 eManager = EManager()
 
 
-class EnrouteNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
+##################################
+########## Flask views ###########
+##################################
 
-    def recv_connect(self):
-        def start_notifying():
-            while True:
-                self.broadcast_event(
-                    'data',
-                    eManager.overall_status()
-                )
-                sockets = len(self.environ['socketio'].server.sockets.keys())
-                gevent.sleep(sockets)
-        self.spawn(start_notifying)
-
-    def on_user_message(self, payload):
-        payload = json.loads(payload)
-        print "action: %s" % (payload['action'])
-        eManager.create_eNode(payload)
-        self.broadcast_event('data', 'new eNode created')
+@app.route('/')
+def index():
+    # import test_data
+    # status = test_data.data
+    status = eManager.overall_status()
+    return render_template('index.html', status=status)
 
 
-class Application(object):
-    def __init__(self):
-        self.buffer = []
+##################################
+#### Socket io specific codes ####
+##################################
 
-    def __call__(self, environ, start_response):
-        path = environ['PATH_INFO'].strip('/') or 'index.html'
+# Connection established with a new client
+@socketio.on('connect')
+def connect():
+    print 'Client connected'
 
-        if path.startswith('static/') or path == 'index.html':
-            try:
-                data = open(path).read()
-            except Exception:
-                return not_found(start_response)
-
-            if path.endswith(".js"):
-                content_type = "text/javascript"
-            elif path.endswith(".css"):
-                content_type = "text/css"
-            elif path.endswith(".swf"):
-                content_type = "application/x-shockwave-flash"
-            else:
-                content_type = "text/html"
-
-            start_response('200 OK', [('Content-Type', content_type)])
-            return [data]
-
-        if path.startswith("socket.io"):
-            socketio_manage(environ, {'/enroute': EnrouteNamespace})
-        else:
-            return not_found(start_response)
-
-        def hello(self):
-            print "hello world"
+    @copy_current_request_context
+    def start_notifying():
+        while True:
+            emit('data', eManager.overall_status(), broadcast=True)
+            sockets = len(request.environ['socketio'].server.sockets.keys())
+            gevent.sleep(sockets)
+    gevent.spawn(start_notifying)
 
 
-def not_found(start_response):
-    start_response('404 Not Found', [])
-    return ['<h1>Not Found</h1>']
+# Connection to a client lost
+@socketio.on('disconnect')
+def disconnect():
+    print 'Client disconnected'
+
+
+# New eNode request initiated by a client
+@socketio.on('new-eNode')
+def new_download(payload):
+    payload = json.loads(payload)
+    print "action: %s" % (payload['action'])
+    eManager.create_eNode(payload)
+    emit('data', 'new eNode created', broadcast=True)
+
+
+@socketio.on('stop-eNode')
+def stop_download(payload):
+    eManager.eNodes[0].stop_threads()
 
 
 if __name__ == '__main__':
-    print 'Listening on port http://0.0.0.0:8080 and on port 10843 \
-        (flash policy server)'
-    SocketIOServer(
-        ('0.0.0.0', 8080), Application(),
-        resource="socket.io", policy_server=True,
-        policy_listener=('0.0.0.0', 10843)
-    ).serve_forever()
+    print 'Listening on http://localhost:5000'
+    socketio.run(app)

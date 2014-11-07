@@ -3,6 +3,7 @@ import threading
 import os
 
 from contextlib import closing
+from datetime import datetime
 
 
 class EThread(threading.Thread):
@@ -44,11 +45,14 @@ class EThread(threading.Thread):
         return not self.stopped()
 
     def download(self, part_file, chunk_size, headers):
+        self.now = datetime.now()
         with closing(
             requests.get(self.url, stream=True, headers=headers)
         ) as request:
             with open(self.file_name, 'wb') as part_file:
                 for chunk in request.iter_content(chunk_size=chunk_size):
+                    print datetime.now() - self.now
+                    self.now = datetime.now()
                     if chunk:
                         part_file.write(chunk)
                         part_file.flush()

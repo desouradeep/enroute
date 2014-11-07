@@ -60,6 +60,7 @@ class ENode(threading.Thread):
         '''
         try:
             request_headers = requests.head(self.url)
+            print request_headers
             if request_headers.status_code == 200:
                 headers = request_headers.headers
                 return headers
@@ -252,6 +253,8 @@ class ENode(threading.Thread):
             'percentage_downloaded': self.percentage_downloaded(),
             'thread_status': thread_status,
             'stop_downloading': self.stop_downloading,
+            # 'eta': self.eta(),
+            # 'speed': self.speed(),
         }
 
         for thread in self.worker_threads:
@@ -262,7 +265,7 @@ class ENode(threading.Thread):
                 'data_downloaded': thread.data_downloaded,
                 'running': thread.running(),
                 'download_completed': thread.download_completed(),
-                'percentage_downloaded': thread.percentage_downloaded,
+                'percentage_downloaded': thread.percentage_downloaded(),
             })
 
         return eNode_status
