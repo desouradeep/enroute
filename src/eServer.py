@@ -1,4 +1,7 @@
 #!/usr/bin/python
+from gevent import monkey
+monkey.patch_all()
+
 from flask import Flask, render_template, request
 from flask.ext.socketio import SocketIO, emit
 from flask import copy_current_request_context
@@ -10,8 +13,10 @@ from eManager import EManager
 
 
 app = Flask(__name__)
+app.debug = True
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app)
+thread = None
 
 eManager = EManager()
 
@@ -22,6 +27,8 @@ eManager = EManager()
 
 @app.route('/')
 def index():
+    # import test_data
+    # status = test_data.data
     status = eManager.overall_status()
     return render_template('index.html', status=status)
 
@@ -59,7 +66,11 @@ def new_download(payload):
     emit('data', 'new eNode created', broadcast=True)
 
 
+@socketio.on('stop-eNode')
+def stop_download(payload):
+    eManager.eNodes[0].stop_threads()
+
+
 if __name__ == '__main__':
     print 'Listening on http://localhost:5000'
-    app.DEBUG = True
     socketio.run(app)
